@@ -1,0 +1,12 @@
+# Skills from other people's repos. `./install.sh others` installs the missing ones.
+# One line per repo: <owner/repo> <skill> <skill> ...
+# `./install.sh snapshot` adds what you installed with `npx skills add`.
+bencium/bencium-marketplace bencium-innovative-ux-designer
+coreyhaines31/marketingskills ad-creative ads ai-seo co-marketing community-marketing content-strategy copy-editing copywriting customer-research image marketing-ideas marketing-psychology pricing product-marketing
+JuliusBrussee/caveman caveman caveman-commit
+mattpocock/skills code-review codebase-design diagnosing-bugs domain-modeling grill-me grill-with-docs handoff implement improve-codebase-architecture prototype research tdd teach to-spec to-tickets wayfinder writing-great-skills
+pbakaus/impeccable impeccable
+UditAkhourii/adhd adhd
+Vansitha/coding-conventions coding-system
+vercel-labs/skills find-skills
+wshobson/agents interaction-design
