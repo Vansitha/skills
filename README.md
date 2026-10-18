@@ -5,6 +5,7 @@ My skills for Claude Code. Each skill is one folder in `skills/`.
 | Skill | What it does |
 |---|---|
 | [explain](skills/explain) | Makes anything easy to understand: plain words, a diagram, an interactive page or a narrated video. |
+| [mascot](skills/mascot) | Makes cute, glowing mascot characters and app icons, from a reference image or a description. |
 | [next-session](skills/next-session) | Hands the work off to a fresh session and starts it. |
 | [ui-art-prompts](skills/ui-art-prompts) | Writes image prompts for art that sits behind an app's interface. |
 | [x-builder-voice](skills/x-builder-voice) | Drafts X posts in my builder voice. |

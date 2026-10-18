@@ -1,0 +1,35 @@
+{
+  "space": { "x": 0, "y": 0, "size": 1024 },
+  "background": {
+    "top": "3FDDB8",
+    "bottom": "10B48C",
+    "glows": [
+      { "x": 512, "y": 880, "r": 300, "color": "078E6D", "alpha": 0.75 },
+      { "x": 230, "y": 170, "r": 460, "color": "7AF0D2", "alpha": 0.45 }
+    ],
+    "sparkles": {
+      "color": "E9FFF8", "alpha": 0.85,
+      "dots": [[180, 220, 5], [820, 180, 6], [900, 470, 4], [120, 560, 3], [150, 840, 5], [860, 800, 4.5], [330, 120, 3], [680, 940, 3]]
+    }
+  },
+  "shapes": [
+    {
+      "type": "body",
+      "path": "M512 250 C560 330 760 480 760 650 C760 800 650 880 512 880 C374 880 264 800 264 650 C264 480 464 330 512 250 Z",
+      "fill": "2CD3A9",
+      "shadow": { "color": "06876A", "alpha": 0.75, "blur": 28 },
+      "glow": { "color": "D4FFF1", "width": 62, "blur": 14,
+                "extra": [ { "x": 420, "y": 470, "rx": 110, "ry": 40, "rotation": -40, "alpha": 0.45 } ] },
+      "rim": { "color": "EFFFFA", "alpha": 0.9, "width": 2.4 }
+    },
+    { "type": "ellipse", "x": 360, "y": 735, "rx": 34, "ry": 16, "fill": "FF4F86", "alpha": 0.6, "blur": 6 },
+    { "type": "ellipse", "x": 664, "y": 735, "rx": 34, "ry": 16, "fill": "FF4F86", "alpha": 0.6, "blur": 6 },
+    { "type": "eye", "x": 448, "y": 640, "rx": 58, "ry": 84, "tilt": -6,
+      "pupil": { "dx": 8, "dy": 8, "rx": 36, "ry": 56 }, "shine": { "dx": -26, "dy": 4, "rx": 11, "ry": 21 } },
+    { "type": "eye", "x": 572, "y": 632, "rx": 58, "ry": 84, "tilt": -6,
+      "pupil": { "dx": 8, "dy": 8, "rx": 36, "ry": 56 }, "shine": { "dx": -26, "dy": 4, "rx": 11, "ry": 21 } },
+    { "type": "path", "path": "M486 745 Q512 770 538 745", "stroke": "053B2E", "width": 10 },
+    { "type": "ring", "x": 512, "y": 196, "rx": 120, "ry": 26, "rotation": -6, "width": 22, "color": "FFC618", "highlight": "FFDA5E" }
+  ],
+  "preview": { "glow": "16C79A", "rim": "B8FFE9", "rimAlpha": 0.9 }
+}
