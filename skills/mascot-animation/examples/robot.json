@@ -1,0 +1,18 @@
+{
+  "name": "robot",
+  "about": "A boxy little robot in the flat sticker look with a light sticker border for dark screens: a rounded box body, a dark screen face with glowing eyes and smile, arms that hang from shoulders (the wave shot lifts one), and an antenna that bobs.",
+  "body": {"shape": "box", "size": [0.9, 0.62, 0.82], "bevel": 0.22},
+  "palette": {"fill": "#DDE3EA", "line": "#1D2733", "edge": "#B9C3CE", "decal": "#7CF3FF", "screen": "#1E2A3A", "shine": "#FFFFFF", "accent": "#FF6B5B"},
+  "look": {"shading": "toon", "outline": 0.06, "shadow_tint": 0.86, "band": 0.4, "border": {"width": 0.07, "color": "#FFFFFF"}},
+  "eyes": {"at": [[-0.24, 0.12], [0.24, 0.12]], "size": [0.1, 0.13], "style": "dot", "shine": {"at": [-0.3, 0.4], "size": 0.3}},
+  "mouth": {"at": [0, -0.1], "width": 0.22, "shape": "smile", "line": 0.04},
+  "decals": [{"type": "disc", "at": [0, 0.04], "size": [0.62, 0.42], "color": "screen", "lift": 0.3}],
+  "parts": [
+    {"name": "ArmL", "shape": "capsule", "size": [0.12, 0.12, 0.36], "at": [-1.02, 0.0, -0.16], "rotate": [0, 12, 0], "pivot": [-0.94, 0.0, 0.18], "jiggle": 8},
+    {"name": "ArmR", "shape": "capsule", "size": [0.12, 0.12, 0.36], "at": [1.02, 0.0, -0.16], "rotate": [0, -12, 0], "pivot": [0.94, 0.0, 0.18], "jiggle": 8},
+    {"name": "Antenna", "shape": "capsule", "size": [0.035, 0.035, 0.2], "at": [0, 0, 0.98], "pivot": [0, 0, 0.8], "jiggle": 14, "color": "line", "outline": false},
+    {"name": "AntennaTip", "shape": "sphere", "size": [0.1], "at": [0, 0, 1.22], "pivot": [0, 0, 0.8], "jiggle": 14, "color": "accent"}
+  ],
+  "rest": [-6, 0, 12],
+  "motion": {"flip": "z", "hop": 0.7, "squash": 0.06, "wave": "ArmL"}
+}

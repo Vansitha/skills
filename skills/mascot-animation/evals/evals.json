@@ -1,0 +1,57 @@
+{
+  "skill_name": "mascot-animation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm making a habit tracker app called Sprout and our mascot is a little seed: a round, light brown seed shape with a tiny green sprout leaf on top, dot eyes and rosy cheeks. Can you make me a happy hop animation for when someone completes a habit, and an idle loop for the home screen? It's an iOS app so I need clips I can drop into Xcode, with a transparent background.",
+      "expected_output": "A seed mascot with a leaf part, rendered as a ~1 s hop and a seamless ~4 s idle loop, encoded as HEVC-with-alpha .mov files (plus stills/previews), saved to the outputs folder.",
+      "files": [],
+      "assertions": [
+        "A hop clip is delivered as an HEVC .mov (hvc1) for Xcode",
+        "The hop .mov keeps a transparent background when decoded by AVFoundation",
+        "The hop clip lasts between 0.5 and 1.6 s",
+        "An idle clip is delivered as an HEVC .mov (hvc1) for Xcode",
+        "The idle .mov keeps a transparent background when decoded by AVFoundation",
+        "The idle clip lasts between 2.0 and 6.0 s",
+        "The idle clip loops: its first and last frames match (PSNR >= 30 dB)",
+        "A still PNG (for Reduce Motion or a poster) is delivered",
+        "The mascot is a round light brown seed with a green leaf on top, dot eyes and rosy cheeks (visual)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "here's our mascot as an svg path (it's a cloud): M 300 600 C 200 600 150 520 190 450 C 160 360 250 290 330 320 C 370 220 520 200 580 290 C 660 250 770 300 760 400 C 850 420 860 560 760 600 Z. white cloud, navy outline, two little eyes. we need a 'surprised' reaction and a loading spinner for our website, transparent so it sits on any background color",
+      "expected_output": "A cloud mascot built from the given path, a surprised clip and a seamless spinner loop, encoded as WebM with alpha (and ideally HEVC for Safari), saved to the outputs folder.",
+      "files": [],
+      "assertions": [
+        "A surprised clip is delivered as VP9 WebM for the web",
+        "The surprised WebM keeps its alpha (transparent corner when decoded)",
+        "A spinner clip is delivered as VP9 WebM for the web",
+        "The spinner WebM keeps its alpha (transparent corner when decoded)",
+        "The spinner is a short seamless loop (at most 2 s; its last frame is close to its first, PSNR >= 18 dB)",
+        "An HEVC-with-alpha .mov is also delivered for Safari",
+        "The body is built from the SVG path the user gave",
+        "An HTML snippet plays the clips in a <video> with a WebM source",
+        "The mascot reads as a white cloud with a navy outline and two eyes (visual)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our fintech app's mascot is a gold coin with a smiley face, thick black outline, flat colours, kind of sticker-ish. Make me a launch animation for the splash screen at full phone size (1080x2340), plus a dark mode version for black backgrounds.",
+      "expected_output": "A gold sticker coin with a face, an entrance/splash clip at 1080x2340 in a light version and a dark-mode version, both with transparent backgrounds, saved to the outputs folder.",
+      "files": [],
+      "assertions": [
+        "A light splash clip is delivered at 1080x2340",
+        "The light splash keeps a transparent background",
+        "The light splash lasts between 1.2 and 3.5 s",
+        "The light splash settles: its last two frames match (PSNR >= 35 dB)",
+        "A dark splash clip is delivered at 1080x2340",
+        "The dark splash keeps a transparent background",
+        "The dark splash lasts between 1.2 and 3.5 s",
+        "The dark splash settles: its last two frames match (PSNR >= 35 dB)",
+        "The mascot is a gold coin with a smiley face and a thick black outline, flat and sticker-like (visual)",
+        "The dark version reads clearly on black (visual)"
+      ]
+    }
+  ]
+}

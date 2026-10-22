@@ -1,0 +1,16 @@
+{
+  "name": "blob",
+  "about": "A soft, rounded character with toon shading: a marshmallow body, two little ears, dot eyes, rosy cheeks and a small smile. It twirls rather than flips.",
+  "body": {"shape": "blob", "size": [1.0, 0.85, 0.95], "roundness": 2.6},
+  "palette": {"fill": "#8FD6A8", "line": "#14302A", "edge": "fill", "decal": "line", "shine": "#FFFFFF", "blush": "#FF9AAE"},
+  "look": {"shading": "toon", "outline": 0.05, "shadow_tint": 0.8, "band": 0.45, "highlight": true, "highlight_at": 0.97},
+  "eyes": {"at": [[-0.33, 0.14], [0.33, 0.14]], "size": [0.12, 0.17], "style": "dot", "shine": {"at": [-0.3, 0.45], "size": 0.36}},
+  "mouth": {"at": [0, -0.1], "width": 0.2, "shape": "smile"},
+  "cheeks": {"at": [[-0.55, -0.08], [0.55, -0.08]], "size": [0.13, 0.075]},
+  "parts": [
+    {"name": "EarL", "shape": "sphere", "size": [0.2, 0.16, 0.24], "at": [-0.55, 0.05, 0.82], "rotate": [0, 25, 0]},
+    {"name": "EarR", "shape": "sphere", "size": [0.2, 0.16, 0.24], "at": [0.55, 0.05, 0.82], "rotate": [0, -25, 0]}
+  ],
+  "rest": [-6, 0, 10],
+  "motion": {"flip": "z", "flips": 1, "hop": 0.8, "squash": 0.1, "shake": "z"}
+}

@@ -1,0 +1,29 @@
+{
+  "name": "berry",
+  "about": "A strawberry in the soft look (a lit, slightly glossy toy, no hard bands): an egg body wider at the top, seeds, green leaves and a stem as parts, dot eyes, a smile and cheeks.",
+  "body": {"shape": "egg", "size": [0.9, 0.82, 1.0], "taper": -0.4},
+  "palette": {"fill": "#E8394A", "line": "#5A0F18", "decal": "#2A0A10", "seed": "#FFD966", "leaf": "#4CAF50", "shine": "#FFFFFF", "blush": "#FF8FA0"},
+  "look": {"shading": "soft", "outline": 0.035, "roughness": 0.4, "light": [50, -30, -25]},
+  "eyes": {"at": [[-0.28, 0.22], [0.28, 0.22]], "size": [0.1, 0.14], "style": "dot", "shine": {"at": [-0.3, 0.45], "size": 0.38}},
+  "mouth": {"at": [0, 0.0], "width": 0.18, "shape": "smile", "line": 0.04},
+  "cheeks": {"at": [[-0.5, 0.04], [0.5, 0.04]], "size": [0.11, 0.065]},
+  "decals": [
+    {"type": "disc", "at": [-0.45, -0.35], "size": [0.03, 0.045], "color": "seed"},
+    {"type": "disc", "at": [-0.15, -0.45], "size": [0.03, 0.045], "color": "seed"},
+    {"type": "disc", "at": [0.2, -0.42], "size": [0.03, 0.045], "color": "seed"},
+    {"type": "disc", "at": [0.48, -0.3], "size": [0.03, 0.045], "color": "seed"},
+    {"type": "disc", "at": [0.0, -0.7], "size": [0.03, 0.045], "color": "seed"},
+    {"type": "disc", "at": [-0.3, -0.65], "size": [0.03, 0.045], "color": "seed"},
+    {"type": "disc", "at": [0.3, -0.62], "size": [0.03, 0.045], "color": "seed"},
+    {"type": "disc", "at": [-0.62, 0.0], "size": [0.03, 0.045], "color": "seed"},
+    {"type": "disc", "at": [0.62, 0.02], "size": [0.03, 0.045], "color": "seed"}
+  ],
+  "parts": [
+    {"name": "LeafL", "shape": "sphere", "size": [0.32, 0.12, 0.1], "at": [-0.3, 0.05, 0.98], "rotate": [0, 20, 0], "pivot": [0, 0, 0.95], "color": "leaf", "jiggle": 8},
+    {"name": "LeafR", "shape": "sphere", "size": [0.32, 0.12, 0.1], "at": [0.3, 0.05, 0.98], "rotate": [0, -20, 0], "pivot": [0, 0, 0.95], "color": "leaf", "jiggle": 8},
+    {"name": "LeafB", "shape": "sphere", "size": [0.12, 0.3, 0.1], "at": [0, 0.25, 1.0], "pivot": [0, 0, 0.95], "color": "leaf", "jiggle": 6},
+    {"name": "Stem", "shape": "capsule", "size": [0.05, 0.05, 0.16], "at": [0, 0.05, 1.12], "pivot": [0, 0, 0.98], "color": "leaf", "jiggle": 12}
+  ],
+  "rest": [-8, 0, 10],
+  "motion": {"flip": "z", "hop": 0.85, "squash": 0.09}
+}

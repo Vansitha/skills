@@ -1,0 +1,27 @@
+{
+  "name": "cat",
+  "about": "An orange cat: a round toon body with cone ears and a tail that swing and settle as it moves (parts with pivots and jiggle), dot eyes, a pink nose, a 'w' mouth, whiskers and stripes.",
+  "body": {"shape": "blob", "size": [1.0, 0.9, 0.9], "roundness": 2.3},
+  "palette": {"fill": "#F6A35C", "line": "#3A2416", "decal": "line", "stripe": "#D9803A", "nose": "#F27A8A", "blush": "#FF9AAE"},
+  "look": {"shading": "toon", "outline": 0.05, "shadow_tint": 0.82, "band": 0.45, "highlight": true, "highlight_at": 0.975},
+  "eyes": {"at": [[-0.34, 0.16], [0.34, 0.16]], "size": [0.12, 0.16], "style": "dot", "shine": {"at": [-0.3, 0.45], "size": 0.36}},
+  "mouth": {"points": [[-0.13, -0.08], [-0.11, -0.17], [-0.02, -0.17], [0, -0.09], [0.02, -0.17], [0.11, -0.17], [0.13, -0.08]], "line": 0.035},
+  "cheeks": {"at": [[-0.56, -0.08], [0.56, -0.08]], "size": [0.12, 0.07]},
+  "decals": [
+    {"type": "disc", "at": [0, -0.03], "size": [0.06, 0.045], "color": "nose", "lift": 2},
+    {"type": "stroke", "points": [[-0.62, 0.0], [-0.75, 0.02], [-0.85, 0.04], [-0.95, 0.06]], "width": 0.022},
+    {"type": "stroke", "points": [[-0.62, -0.08], [-0.75, -0.09], [-0.85, -0.1], [-0.95, -0.12]], "width": 0.022},
+    {"type": "stroke", "points": [[0.62, 0.0], [0.75, 0.02], [0.85, 0.04], [0.95, 0.06]], "width": 0.022},
+    {"type": "stroke", "points": [[0.62, -0.08], [0.75, -0.09], [0.85, -0.1], [0.95, -0.12]], "width": 0.022},
+    {"type": "stroke", "points": [[-0.12, 0.62], [-0.1, 0.52], [-0.09, 0.46], [-0.08, 0.4]], "width": 0.05, "color": "stripe", "lift": 0.5},
+    {"type": "stroke", "points": [[0.0, 0.66], [0.0, 0.56], [0.0, 0.5], [0.0, 0.42]], "width": 0.05, "color": "stripe", "lift": 0.5},
+    {"type": "stroke", "points": [[0.12, 0.62], [0.1, 0.52], [0.09, 0.46], [0.08, 0.4]], "width": 0.05, "color": "stripe", "lift": 0.5}
+  ],
+  "parts": [
+    {"name": "EarL", "shape": "cone", "size": [0.27, 0, 0.24], "at": [-0.52, 0.0, 0.86], "rotate": [0, -20, 0], "pivot": [-0.48, 0.0, 0.68], "jiggle": 10},
+    {"name": "EarR", "shape": "cone", "size": [0.27, 0, 0.24], "at": [0.52, 0.0, 0.86], "rotate": [0, 20, 0], "pivot": [0.48, 0.0, 0.68], "jiggle": 10},
+    {"name": "Tail", "shape": "capsule", "size": [0.1, 0.1, 0.42], "at": [1.02, 0.3, -0.25], "rotate": [0, -40, 0], "pivot": [0.78, 0.3, -0.55], "jiggle": 16}
+  ],
+  "rest": [-6, 0, 10],
+  "motion": {"flip": "z", "hop": 0.8, "squash": 0.1}
+}

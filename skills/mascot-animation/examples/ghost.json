@@ -1,0 +1,71 @@
+{
+  "name": "ghost",
+  "about": "A friendly ghost cut from a 2D silhouette (an SVG path) and made into a thick, rounded sticker: white with a plum outline, dot eyes and an 'o' mouth. Good for any mascot first drawn in 2D.",
+  "body": {
+    "shape": "path",
+    "size": [
+      1.0,
+      0.22
+    ],
+    "bevel": 0.08,
+    "d": "M 512 120 C 300 120 200 280 200 470 L 200 820 C 240 780 280 780 320 830 C 360 880 400 880 440 830 C 480 780 544 780 584 830 C 624 880 664 880 704 830 C 744 780 784 780 824 820 L 824 470 C 824 280 724 120 512 120 Z"
+  },
+  "palette": {
+    "fill": "#FFFFFF",
+    "line": "#5B4B8A",
+    "edge": "#E9E3FF",
+    "decal": "#2A2340",
+    "shine": "#FFFFFF",
+    "white": "#FFFFFF"
+  },
+  "look": {
+    "shading": "toon",
+    "outline": 0.06,
+    "shadow_tint": 0.9,
+    "band": 0.4
+  },
+  "eyes": {
+    "at": [
+      [
+        -0.3,
+        0.32
+      ],
+      [
+        0.3,
+        0.32
+      ]
+    ],
+    "size": [
+      0.11,
+      0.15
+    ],
+    "style": "dot",
+    "shine": {
+      "at": [
+        -0.3,
+        0.45
+      ],
+      "size": 0.36
+    }
+  },
+  "mouth": {
+    "at": [
+      0,
+      0.0
+    ],
+    "width": 0.16,
+    "shape": "o"
+  },
+  "rest": [
+    -6,
+    0,
+    -10
+  ],
+  "motion": {
+    "flip": "y",
+    "flips": 1,
+    "hop": 0.7,
+    "squash": 0.07,
+    "shake": "z"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "name": "coin",
+  "about": "A flat black-and-white sticker coin: a thick disc with a reeded rim, an inverted-hull outline, a ring, and two eyes with catchlight notches glancing up and right. It flips end over end.",
+  "body": {
+    "shape": "disc",
+    "size": [
+      1.0,
+      0.15
+    ],
+    "bevel": 0.035
+  },
+  "palette": {
+    "fill": "#FFFFFF",
+    "line": "#000000",
+    "edge": "line",
+    "decal": "line"
+  },
+  "look": {
+    "shading": "flat",
+    "outline": 0.1,
+    "edge_highlight": true,
+    "reeding": {
+      "stripes": 64,
+      "duty": 0.3
+    }
+  },
+  "eyes": {
+    "at": [
+      [
+        -0.168,
+        0.092
+      ],
+      [
+        0.351,
+        0.267
+      ]
+    ],
+    "size": [
+      0.229,
+      0.298
+    ],
+    "tilt": 15,
+    "style": "bite",
+    "shine": {
+      "at": [
+        -0.8,
+        -0.1
+      ],
+      "size": 0.4
+    }
+  },
+  "decals": [
+    {
+      "type": "ring",
+      "r": 0.86,
+      "width": 0.046,
+      "side": "both"
+    }
+  ],
+  "rest": [
+    -12,
+    0,
+    12
+  ],
+  "motion": {
+    "flip": "x",
+    "flips": 2,
+    "hop": 1.0,
+    "squash": 0.08,
+    "shake": "y",
+    "spin_axis": "x",
+    "spin_seconds": 0.5
+  },
+  "variants": {
+    "ink": {
+      "palette": {
+        "fill": "#000000",
+        "line": "#FFFFFF",
+        "edge": "line",
+        "decal": "line"
+      },
+      "eyes": {
+        "shine": {
+          "at": [
+            0.8,
+            0.1
+          ],
+          "size": 0.4
+        }
+      }
+    }
+  }
+}
