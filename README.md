@@ -4,6 +4,7 @@ My skills for Claude Code. Each skill is one folder in `skills/`.
 
 | Skill | What it does |
 |---|---|
+| [clips](skills/clips) | Clips stream recordings into YouTube Shorts with a local OpenShorts and uploads them: `/clips up <url>`, `/clips stats`, `/clips down`. |
 | [explain](skills/explain) | Makes anything easy to understand: plain words, a diagram, an interactive page or a narrated video. |
 | [mascot](skills/mascot) | Makes cute, glowing mascot characters and app icons, from a reference image or a description. |
 | [next-session](skills/next-session) | Hands the work off to a fresh session and starts it. |
