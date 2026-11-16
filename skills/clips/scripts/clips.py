@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """Run a local OpenShorts clipping pipeline from one command.
 
-    clips.py setup --openshorts DIR [--library DIR]   one-time: where things live
+    clips.py setup [--openshorts DIR] [--library DIR]
+                                    install checklist: does what it can, prints the next step
+    clips.py key                    paste the Gemini key into OpenShorts' .env (run in a terminal)
+    clips.py build                  build OpenShorts' Docker images (slow the first time)
     clips.py up [URL] [--again]     start Docker + OpenShorts, clip URL, auto-upload
     clips.py stats                  clips made, uploaded, pending, where each one is
     clips.py down [--force]         stop the worker, OpenShorts and Docker Desktop
-    clips.py auth                   sign in to YouTube again (the uploader's auth)
+    clips.py auth                   sign in to YouTube (run in a terminal)
     clips.py worker                 internal: follows jobs, saves clips, uploads them
 
 Standard library only, Python 3.9+. Settings and state live in ~/.config/clips/
-(override with CLIPS_HOME), never in this repository. Uploading is done by the
-OpenShorts checkout's youtube_uploader/upload.py, run with `uv`.
+(override with CLIPS_HOME), never in this repository. Uploading is done by
+upload.py next to this script, run with `uv`.
 """
 from __future__ import annotations
 
@@ -36,6 +39,29 @@ CONFIG = HOME / "config.json"
 STATE = HOME / "state.json"
 PIDFILE = HOME / "worker.pid"
 WORKER_LOG = HOME / "worker.log"
+YT = HOME / "youtube"  # upload.py's sign-in files and upload log
+CLIENT_SECRET = YT / "client_secret.json"
+TOKEN = YT / "token.json"
+UPLOADER = Path(__file__).resolve().parent / "upload.py"
+
+OPENSHORTS_GIT = "https://github.com/mutonby/openshorts.git"
+# The OpenShorts version this skill was tested with. Newer ones may change the
+# API calls below, so move this forward only after a test clip on the new one.
+OPENSHORTS_COMMIT = "8af4a48a2bdda96c9a02bb8df3f09d4e7ec99e0f"
+DEFAULT_ROOT = Path.home() / "clips"
+DOWNLOADS = Path(os.environ.get("CLIPS_DOWNLOADS", Path.home() / "Downloads"))
+# What a Mac needs in OpenShorts' .env, with the comment written above each.
+ENV_SETTINGS = [
+    ("GEMINI_API_KEY", "", "Google Gemini key, free from https://aistudio.google.com/app/apikey "
+                           "(set it with: clips.py key)"),
+    ("MAX_CONCURRENT_JOBS", "1", "One job at a time keeps memory inside Docker Desktop's limit"),
+    ("FFMPEG_ENCODER", "x264", "Macs have no NVIDIA GPU: encode and transcribe on the CPU"),
+    ("WHISPER_DEVICE", "cpu", None),
+    ("WHISPER_COMPUTE", "int8", None),
+    ("JOB_RETENTION_SECONDS", "691200", "Keep finished jobs 8 days (past YouTube's 7-day sign-in), "
+                                        "downloaded sources 1 day"),
+    ("SOURCE_RETENTION_SECONDS", "86400", None),
+]
 
 DEFAULTS = {
     "openshorts_dir": None,
@@ -46,9 +72,6 @@ DEFAULTS = {
     "every_hours": 4,
     "target_clips": 10,  # OpenShorts accepts 1-15 per job
 }
-# Keep finished jobs long enough to survive the 7-day YouTube sign-in window,
-# but drop the (large) downloaded source after a day.
-RETENTION_ENV = {"JOB_RETENTION_SECONDS": "691200", "SOURCE_RETENTION_SECONDS": "86400"}
 VIDEO_HOSTS = ("twitch.tv", "youtube.com", "youtu.be", "kick.com")
 POLL_SECONDS = 30
 UPLOAD_RETRY_SECONDS = 1800
@@ -101,7 +124,7 @@ def load_config() -> dict:
     cfg = dict(DEFAULTS)
     cfg.update(read_json(CONFIG, {}))
     if not cfg.get("openshorts_dir"):
-        sys.exit("Not set up yet. Run: clips.py setup --openshorts /path/to/openshorts")
+        sys.exit("Not set up yet. Run: /clips setup")
     cfg["openshorts_dir"] = str(Path(cfg["openshorts_dir"]).expanduser())
     lib = cfg.get("library_dir") or str(Path(cfg["openshorts_dir"]).parent / "library")
     cfg["library_dir"] = str(Path(lib).expanduser())
@@ -116,8 +139,8 @@ def save_state(state: dict) -> None:
     write_json(STATE, state)
 
 
-def ledger(cfg: dict) -> dict:
-    return read_json(Path(cfg["openshorts_dir"]) / "youtube_uploader" / "uploaded.json", {})
+def ledger(_cfg: dict) -> dict:
+    return read_json(YT / "uploaded.json", {})
 
 
 def slug(text: str, limit: int = 60) -> str:
@@ -128,26 +151,29 @@ def slug(text: str, limit: int = 60) -> str:
 # --------------------------------------------------------------------------- #
 # Docker and the OpenShorts API
 # --------------------------------------------------------------------------- #
-def docker_bin() -> str:
-    found = shutil.which("docker")
+def find_bin(name: str, *places: Path) -> Optional[str]:
+    found = shutil.which(name)
     if found:
         return found
-    for cand in (Path.home() / ".docker/bin/docker", Path("/usr/local/bin/docker"),
-                 Path("/Applications/Docker.app/Contents/Resources/bin/docker")):
-        if cand.exists():
-            return str(cand)
-    sys.exit("Docker isn't installed (no `docker` command found).")
+    return next((str(p) for p in places if p.exists()), None)
+
+
+def docker_path() -> Optional[str]:
+    return find_bin("docker", Path.home() / ".docker/bin/docker", Path("/usr/local/bin/docker"),
+                    Path("/Applications/Docker.app/Contents/Resources/bin/docker"))
+
+
+def uv_path() -> Optional[str]:
+    return find_bin("uv", Path("/opt/homebrew/bin/uv"), Path("/usr/local/bin/uv"),
+                    Path.home() / ".local/bin/uv", Path.home() / ".cargo/bin/uv")
+
+
+def docker_bin() -> str:
+    return docker_path() or sys.exit("Docker isn't installed (no `docker` command found). Run: /clips setup")
 
 
 def uv_bin() -> str:
-    found = shutil.which("uv")
-    if found:
-        return found
-    for cand in (Path("/opt/homebrew/bin/uv"), Path("/usr/local/bin/uv"), Path.home() / ".local/bin/uv",
-                 Path.home() / ".cargo/bin/uv"):
-        if cand.exists():
-            return str(cand)
-    sys.exit("`uv` isn't installed; the YouTube uploader needs it (brew install uv).")
+    return uv_path() or sys.exit("`uv` isn't installed; the YouTube uploader needs it. Run: /clips setup")
 
 
 def docker_running() -> bool:
@@ -179,17 +205,21 @@ def backend_up(cfg: dict) -> bool:
         return False
 
 
+def start_docker() -> None:
+    if docker_running():
+        return
+    print("Starting Docker Desktop…", flush=True)
+    subprocess.run(["open", "-a", "Docker"], check=False)
+    for _ in range(60):
+        time.sleep(3)
+        if docker_running():
+            return
+    sys.exit("Docker Desktop didn't start within 3 minutes. Open it once by hand "
+             "(it may be waiting for you to accept its terms, an update or a prompt).")
+
+
 def start_stack(cfg: dict) -> None:
-    if not docker_running():
-        print("Starting Docker Desktop…", flush=True)
-        subprocess.run(["open", "-a", "Docker"], check=False)
-        for _ in range(60):
-            time.sleep(3)
-            if docker_running():
-                break
-        else:
-            sys.exit("Docker Desktop didn't start within 3 minutes. Open it once by hand "
-                     "(it may be waiting for you to accept an update or a prompt).")
+    start_docker()
     if not backend_up(cfg):
         print("Starting OpenShorts…", flush=True)
         res = compose(cfg, "up", "-d", "backend", "frontend")
@@ -264,8 +294,7 @@ def upload(cfg: dict, job: dict) -> None:
         job["status"] = "done"
         job.pop("blocked", None)
         return
-    script = Path(cfg["openshorts_dir"]) / "youtube_uploader" / "upload.py"
-    cmd = [uv_bin(), "run", str(script), "upload", job["id"], "--clips", ",".join(map(str, todo))]
+    cmd = [uv_bin(), "run", str(UPLOADER), "upload", job["id"], "--clips", ",".join(map(str, todo))]
     if cfg["upload_mode"] == "schedule":
         cmd += ["--schedule", iso(next_slot(cfg)), "--every", str(cfg["every_hours"])]
     else:
@@ -346,31 +375,201 @@ def cmd_worker(_args) -> None:
 # --------------------------------------------------------------------------- #
 # Commands
 # --------------------------------------------------------------------------- #
+def get_openshorts(dest: Path) -> None:
+    """Download OpenShorts at the tested commit: that one commit, no history."""
+    git = shutil.which("git")
+    if not git:
+        sys.exit("git isn't installed. Run `xcode-select --install`, finish Apple's installer, "
+                 "then run setup again.")
+    print(f"Downloading OpenShorts to {dest} …", flush=True)
+    partial = dest.with_name(dest.name + ".partial")
+    shutil.rmtree(partial, ignore_errors=True)
+    partial.mkdir(parents=True)
+    for args in (["init", "-q"], ["remote", "add", "origin", OPENSHORTS_GIT],
+                 ["fetch", "-q", "--depth", "1", "origin", OPENSHORTS_COMMIT],
+                 ["checkout", "-q", "-B", "clips", "FETCH_HEAD"]):
+        res = subprocess.run([git, *args], cwd=partial, capture_output=True, text=True)
+        if res.returncode != 0:
+            sys.exit(f"Downloading OpenShorts failed (git {args[0]}): {res.stderr.strip()[-500:]}")
+    if dest.exists():
+        dest.rmdir()  # only ever an empty folder here
+    partial.rename(dest)
+
+
+def env_value(env: Path, key: str) -> str:
+    try:
+        found = re.findall(rf"^{key}=(.*)$", env.read_text(), re.M)
+    except OSError:
+        return ""
+    return found[-1].strip().strip("\"'") if found else ""
+
+
+def set_env(env: Path, key: str, value: str) -> None:
+    text = env.read_text() if env.exists() else ""
+    line = f"{key}={value}"
+    if re.search(rf"^{key}=", text, re.M):
+        text = re.sub(rf"^{key}=.*$", lambda _m: line, text, flags=re.M)
+    else:
+        text += ("\n" if text and not text.endswith("\n") else "") + line + "\n"
+    env.write_text(text)
+    env.chmod(0o600)
+
+
+def write_env(os_dir: Path) -> list:
+    """Make OpenShorts' .env from its template once, then add any ENV_SETTINGS it lacks."""
+    env = os_dir / ".env"
+    if not env.exists():
+        example = os_dir / ".env.example"
+        text = example.read_text() if example.exists() else ""
+        # The template's placeholder AWS keys would make OpenShorts try to back clips up to S3.
+        env.write_text(re.sub(r"^(AWS_\w+=)", r"# \1", text, flags=re.M))
+    env.chmod(0o600)
+    text = env.read_text()
+    missing = [s for s in ENV_SETTINGS if not re.search(rf"^{s[0]}=", text, re.M)]
+    if missing:
+        lines = ["", "# Added by the clips skill"]
+        for key, value, why in missing:
+            lines += ([f"# {why}"] if why else []) + [f"{key}={value}"]
+        with env.open("a") as f:
+            f.write(("\n" if text and not text.endswith("\n") else "") + "\n".join(lines) + "\n")
+    return [s[0] for s in missing]
+
+
+def adopt_client_secret() -> Optional[str]:
+    """Move the newest Google client file from Downloads into place; returns what happened."""
+    if CLIENT_SECRET.exists():
+        return None
+    try:
+        found = sorted(DOWNLOADS.glob("client_secret*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    except OSError:
+        return None
+    for path in found:
+        data = read_json(path, {})
+        if "installed" in data:
+            YT.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(path), str(CLIENT_SECRET))
+            CLIENT_SECRET.chmod(0o600)
+            return f"Moved the Google client file from Downloads to {CLIENT_SECRET}"
+        if "web" in data:
+            return (f"{path.name} in Downloads is a 'Web application' client. Make another client "
+                    "with application type 'Desktop app'.")
+    return None
+
+
+def images_built(os_dir: Path) -> bool:
+    project = re.sub(r"[^a-z0-9_-]", "", os_dir.name.lower())  # how Compose names the images
+    res = subprocess.run([docker_bin(), "image", "inspect", f"{project}-backend", f"{project}-frontend"],
+                         capture_output=True)
+    return res.returncode == 0
+
+
 def cmd_setup(args) -> None:
-    os_dir = Path(args.openshorts).expanduser().resolve()
-    if not (os_dir / "docker-compose.yml").exists():
-        sys.exit(f"{os_dir} doesn't look like an OpenShorts checkout (no docker-compose.yml).")
-    if not (os_dir / "youtube_uploader" / "upload.py").exists():
-        sys.exit(f"{os_dir}/youtube_uploader/upload.py is missing.")
     cfg = dict(DEFAULTS)
     cfg.update(read_json(CONFIG, {}))
+    if args.openshorts:
+        os_dir = Path(args.openshorts).expanduser().resolve()
+    elif cfg.get("openshorts_dir"):
+        os_dir = Path(cfg["openshorts_dir"]).expanduser()
+    else:
+        os_dir = DEFAULT_ROOT / "openshorts"
+    if sys.platform != "darwin":
+        print("Note: this is made for macOS. Elsewhere, start Docker yourself before `up`.")
+
+    # What needs nobody: download OpenShorts, write its .env, save the settings.
+    done = []
+    if not (os_dir / "docker-compose.yml").exists():
+        if os_dir.exists() and any(os_dir.iterdir()):
+            sys.exit(f"{os_dir} exists and isn't OpenShorts. Run setup with "
+                     "--openshorts <a new folder> instead.")
+        get_openshorts(os_dir)
+        done.append(f"Downloaded OpenShorts to {os_dir}")
+    if write_env(os_dir):
+        done.append("Wrote the settings OpenShorts needs on a Mac into its .env")
     cfg["openshorts_dir"] = str(os_dir)
-    cfg["library_dir"] = str(Path(args.library).expanduser().resolve()) if args.library \
-        else str(os_dir.parent / "library")
+    library = args.library or cfg.get("library_dir") or os_dir.parent / "library"
+    cfg["library_dir"] = str(Path(library).expanduser().resolve())
     write_json(CONFIG, cfg)
-    env = os_dir / ".env"
-    text = env.read_text() if env.exists() else ""
-    added = [k for k in RETENTION_ENV if not re.search(rf"^{k}=", text, re.M)]
-    if added:
-        with env.open("a") as f:
-            f.write("\n# Added by the clips skill: keep finished jobs 8 days, sources 1 day\n")
-            for k in added:
-                f.write(f"{k}={RETENTION_ENV[k]}\n")
-    print(f"Saved {CONFIG}")
-    print(f"OpenShorts: {cfg['openshorts_dir']}")
-    print(f"Clips saved to: {cfg['library_dir']}")
-    if added:
-        print(f"Added {', '.join(added)} to .env (restart OpenShorts to apply).")
+    note = adopt_client_secret()
+    if note:
+        done.append(note)
+
+    has_docker = bool(docker_path())
+    if has_docker:
+        start_docker()
+    me = f"python3 {Path(__file__).resolve()}"
+    checks = [
+        ("Docker Desktop installed and running", has_docker,
+         "Install Docker Desktop: `brew install --cask docker` (asks for the Mac password), or "
+         "download it from https://www.docker.com/products/docker-desktop/ . Open it once and "
+         "accept its terms."),
+        ("OpenShorts built", has_docker and images_built(os_dir),
+         f"Build OpenShorts: `{me} build`. It takes 10 to 30 minutes the first time; carry on "
+         "with the other steps meanwhile."),
+        ("uv installed", bool(uv_path()),
+         "Install uv: `brew install uv`, or without Homebrew: "
+         "`curl -LsSf https://astral.sh/uv/install.sh | sh`"),
+        ("Gemini key saved", bool(env_value(os_dir / ".env", "GEMINI_API_KEY")),
+         f"Save a Gemini key: run `{me} key` in a terminal and paste the key there."),
+        ("Google sign-in client", CLIENT_SECRET.exists(),
+         "Make the Google sign-in client: follow references/google-setup.md, then run setup "
+         "again (it picks the file up from Downloads)."),
+        ("Signed in to YouTube", TOKEN.exists(),
+         f"Sign in to YouTube: run `{me} auth` in a terminal."),
+    ]
+    for line in done:
+        print(line)
+    print(f"\nOpenShorts: {os_dir}\nClips folder: {cfg['library_dir']}\nSettings: {CONFIG}\n")
+    for title, ok, _ in checks:
+        print(f"  [{'x' if ok else ' '}] {title}")
+    todo = [how for _, ok, how in checks if not ok]
+    if not todo:
+        print("\nAll set. Clip a past broadcast with: /clips up <link>")
+        return
+    print("\nStill to do, in this order:")
+    for i, how in enumerate(todo, 1):
+        print(f"  {i}. {how}")
+
+
+def check_gemini_key(key: str) -> Optional[bool]:
+    """True if Google accepts the key, False if it rejects it, None if it can't tell."""
+    req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1",
+                                 headers={"x-goog-api-key": key})
+    try:
+        with urllib.request.urlopen(req, timeout=20):
+            return True
+    except urllib.error.HTTPError as e:
+        return False if e.code in (400, 401, 403) else None
+    except (urllib.error.URLError, OSError):
+        return None
+
+
+def cmd_key(_args) -> None:
+    import getpass
+
+    cfg = load_config()
+    print("Make a free key at https://aistudio.google.com/app/apikey (Create API key) and copy it.")
+    key = getpass.getpass("Paste it here (it stays hidden), then press Return: ").strip()
+    if not key:
+        sys.exit("Nothing pasted, nothing saved.")
+    verdict = check_gemini_key(key)
+    if verdict is False:
+        sys.exit("Google says that key doesn't work. Nothing saved: copy it again and rerun this.")
+    set_env(Path(cfg["openshorts_dir"]) / ".env", "GEMINI_API_KEY", key)
+    print("Saved the key." if verdict else
+          "Saved the key. (Couldn't reach Google to test it; the first clip will.)")
+    if backend_up(cfg):
+        compose(cfg, "restart", "backend")
+        print("Restarted OpenShorts so it uses the new key.")
+
+
+def cmd_build(_args) -> None:
+    cfg = load_config()
+    start_docker()
+    print("Building OpenShorts. The first build takes 10 to 30 minutes…", flush=True)
+    res = subprocess.run([docker_bin(), "compose", "build", "backend", "frontend"], cwd=cfg["openshorts_dir"])
+    if res.returncode != 0:
+        sys.exit("The build failed; the lines above say why.")
+    print("Built.")
 
 
 def to_seconds(text: str) -> float:
@@ -679,8 +878,7 @@ def cmd_down(args) -> None:
 
 def cmd_auth(_args) -> None:
     cfg = load_config()
-    script = Path(cfg["openshorts_dir"]) / "youtube_uploader" / "upload.py"
-    res = subprocess.run([uv_bin(), "run", str(script), "auth"], cwd=cfg["openshorts_dir"])
+    res = subprocess.run([uv_bin(), "run", str(UPLOADER), "auth"], cwd=cfg["openshorts_dir"])
     if res.returncode == 0:
         state = load_state()
         for j in state["jobs"]:
@@ -697,8 +895,10 @@ def main(argv=None) -> None:
     p = argparse.ArgumentParser(description="Local OpenShorts clipping pipeline.")
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("setup")
-    s.add_argument("--openshorts", required=True)
-    s.add_argument("--library")
+    s.add_argument("--openshorts", help=f"where OpenShorts lives (default {DEFAULT_ROOT}/openshorts)")
+    s.add_argument("--library", help="where clips are saved (default: next to OpenShorts)")
+    sub.add_parser("key")
+    sub.add_parser("build")
     u = sub.add_parser("up")
     u.add_argument("url", nargs="?")
     u.add_argument("--from", dest="start", help="clip only from this time, e.g. 1:15:00")
@@ -710,8 +910,8 @@ def main(argv=None) -> None:
     sub.add_parser("auth")
     sub.add_parser("worker")
     args = p.parse_args(argv)
-    {"setup": cmd_setup, "up": cmd_up, "stats": cmd_stats, "down": cmd_down,
-     "auth": cmd_auth, "worker": cmd_worker}[args.cmd](args)
+    {"setup": cmd_setup, "key": cmd_key, "build": cmd_build, "up": cmd_up, "stats": cmd_stats,
+     "down": cmd_down, "auth": cmd_auth, "worker": cmd_worker}[args.cmd](args)
 
 
 if __name__ == "__main__":
