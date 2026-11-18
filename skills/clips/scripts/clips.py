@@ -737,8 +737,23 @@ def submit_file(cfg: dict, path: Path) -> str:
     return job_id
 
 
+def sync_clip_length(cfg: dict) -> None:
+    """Mirror the clip length into OpenShorts' .env.
+
+    Each job gets the length with its request, but a job that OpenShorts
+    resumes after a restart is re-run without it and falls back to .env
+    (15-60 s when unset). Writing it there too keeps resumed jobs at the
+    chosen length; OpenShorts reads .env at its next start.
+    """
+    env = Path(cfg["openshorts_dir"]) / ".env"
+    for key in ("clip_min_seconds", "clip_max_seconds"):
+        if cfg.get(key) and env_value(env, key.upper()) != str(int(cfg[key])):
+            set_env(env, key.upper(), str(int(cfg[key])))
+
+
 def cmd_up(args) -> None:
     cfg = load_config()
+    sync_clip_length(cfg)
     span = stretch(args)
     if args.url:
         parsed = urlparse(args.url.strip())
