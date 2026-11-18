@@ -96,10 +96,12 @@ line (for example "sign-in expired"), put that first and say what to do.
 ## `/clips down`
 
 Run `down`. If it exits saying a stream is still being clipped, tell the user
-that stopping now throws that stream's progress away, and only run
-`down --force` if they say so. Otherwise report what it stopped. Clips already
-uploaded or scheduled are on YouTube and aren't affected; clips still waiting
-to upload go up at the next `/clips up`.
+that stopping now pauses it (the clip being rendered starts over), and only
+run `down --force` if they say so. Paused streams carry on at the next
+`/clips up`, if that's within about a day; after that OpenShorts has deleted
+the downloaded footage and they fail. Otherwise report what it stopped. Clips
+already uploaded or scheduled are on YouTube and aren't affected; clips still
+waiting to upload go up at the next `/clips up`.
 
 ## `/clips auth`
 

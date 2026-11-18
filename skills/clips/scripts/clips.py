@@ -879,7 +879,8 @@ def cmd_down(args) -> None:
     state = load_state()
     processing = [j for j in state["jobs"] if j["status"] == "processing"]
     if processing and not args.force:
-        print("Still clipping, stopping now loses that work:")
+        print("Still clipping. Stopping now pauses it: the clip being rendered starts over "
+              "at the next `up`:")
         for j in processing:
             print(f"  {j['url']} (started {ago(j['submitted_at'])} ago)")
         print("Run `down --force` to stop anyway.")
@@ -889,10 +890,8 @@ def cmd_down(args) -> None:
         os.kill(pid, signal.SIGTERM)
         PIDFILE.unlink(missing_ok=True)
         print("Stopped the worker.")
-    for j in processing:
-        j["status"] = "failed"
-        j["error"] = "stopped by /clips down before it finished; run up with the link again"
-    save_state(state)
+    # OpenShorts resumes unfinished jobs when it next starts, so they stay
+    # 'processing' here for the worker to pick up again.
     if docker_running():
         res = compose(cfg, "stop")
         print("Stopped OpenShorts." if res.returncode == 0 else "docker compose stop failed: " + res.stderr[-500:])
@@ -900,6 +899,9 @@ def cmd_down(args) -> None:
         print("Quit Docker Desktop.")
     else:
         print("Docker Desktop isn't running.")
+    if processing:
+        print(f"Paused {len(processing)} stream(s) mid-clipping. They carry on at the next `up`, "
+              "if that's within a day (OpenShorts deletes the downloaded footage after that).")
     pending = [j for j in state["jobs"] if j["status"] == "clipped"]
     if pending:
         print(f"{len(pending)} stream(s) still have clips waiting to upload; they'll go up at the next `up`.")
