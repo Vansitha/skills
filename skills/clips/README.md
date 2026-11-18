@@ -68,6 +68,7 @@ in `~/.config/clips/config.json`:
 - `every_hours` and `first_delay_hours`: the gap between Shorts (4) and before
   the first one (3).
 - `target_clips`: Shorts per stream, 1 to 15 (10).
+- `clip_min_seconds` and `clip_max_seconds`: how long each Short is (45 to 90).
 - `youtube`: tags and a description footer for every upload, for example
   `"youtube": {"tags": ["GTA 6", "Shorts"], "description_footer": "…"}`.
 

@@ -71,6 +71,8 @@ DEFAULTS = {
     "first_delay_hours": 3,
     "every_hours": 4,
     "target_clips": 10,  # OpenShorts accepts 1-15 per job
+    "clip_min_seconds": 45,  # OpenShorts accepts 5-175; its own default is 15
+    "clip_max_seconds": 90,  # 10-180, at least 5 above the minimum; its default is 60
 }
 VIDEO_HOSTS = ("twitch.tv", "youtube.com", "youtu.be", "kick.com")
 POLL_SECONDS = 30
@@ -483,8 +485,12 @@ def cmd_setup(args) -> None:
                      "--openshorts <a new folder> instead.")
         get_openshorts(os_dir)
         done.append(f"Downloaded OpenShorts to {os_dir}")
-    if write_env(os_dir):
-        done.append("Wrote the settings OpenShorts needs on a Mac into its .env")
+    added = write_env(os_dir)
+    if added:
+        done.append(f"Added to OpenShorts' .env: {', '.join(added)}")
+        if backend_up(cfg) and docker_path():
+            compose(dict(cfg, openshorts_dir=str(os_dir)), "restart", "backend")  # reads .env at start
+            done.append("Restarted OpenShorts so it uses them")
     cfg["openshorts_dir"] = str(os_dir)
     library = args.library or cfg.get("library_dir") or os_dir.parent / "library"
     cfg["library_dir"] = str(Path(library).expanduser().resolve())
@@ -705,12 +711,21 @@ def fetch_stretch(cfg: dict, url: str, span: list) -> Path:
     return path
 
 
+def clip_options(cfg: dict) -> dict:
+    """How many clips and how long, as OpenShorts' /api/process fields."""
+    opts = {"target_clips": int(cfg["target_clips"])}
+    for key in ("clip_min_seconds", "clip_max_seconds"):
+        if cfg.get(key):
+            opts[key] = int(cfg[key])
+    return opts
+
+
 def submit_file(cfg: dict, path: Path) -> str:
     """Send a local video to OpenShorts as an upload; returns the job id."""
     res = subprocess.run(
         ["curl", "-sS", "-X", "POST", cfg["api_url"].rstrip("/") + "/api/process",
          "-F", f"file=@{path};type=video/mp4", "-F", "acknowledged=true",
-         "-F", f"target_clips={int(cfg['target_clips'])}"],
+         *[a for k, v in clip_options(cfg).items() for a in ("-F", f"{k}={v}")]],
         capture_output=True, text=True, timeout=1800)
     try:
         job_id = json.loads(res.stdout).get("job_id")
@@ -748,8 +763,7 @@ def cmd_up(args) -> None:
     if span:
         job_id = submit_file(cfg, fetch_stretch(cfg, args.url.strip(), span))
     else:
-        body = {"url": args.url.strip(), "acknowledged": True, "layouts": ["auto"],
-                "target_clips": int(cfg["target_clips"])}
+        body = {"url": args.url.strip(), "acknowledged": True, "layouts": ["auto"], **clip_options(cfg)}
         try:
             resp = api(cfg, "/api/process", body, timeout=120)
         except urllib.error.HTTPError as e:

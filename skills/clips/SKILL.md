@@ -58,7 +58,8 @@ past broadcast from a channel's Videos tab.
 
 Settings in `~/.config/clips/config.json` the user may want to change:
 `upload_mode` (`schedule`, `private` or `none`), `every_hours`,
-`first_delay_hours`, `target_clips` (1-15 clips per stream), and a `youtube`
+`first_delay_hours`, `target_clips` (1-15 clips per stream), `clip_min_seconds`
+and `clip_max_seconds` (45 and 90 by default), and a `youtube`
 section for the uploader (for example `"youtube": {"tags": ["GTA 6", "Shorts"],
 "description_footer": "…"}`).
 
